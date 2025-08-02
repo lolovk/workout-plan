@@ -1,121 +1,110 @@
 /********  exercises.js  ********/
+/* Catálogo basado en: exercises/es/all.json
+   Estructura del JSON de origen:
+   {
+     "Bíceps": [
+       {
+         "Ejercicio": "Banda de tracción de un solo brazo",
+         "Video": { "Hombre": "url-h", "Mujer": "url-m" },
+         "Equipo": "Banda",
+         "Dificultad": "Novato"
+       }, …
+     ],
+     "Tríceps": [ … ]
+   }
+*/
+
 const LS_EX = 'workoutPlan_exercises';
 
-/* -------- seed: cargar tu JSON local -------- */
+/* 1.  Seed: leer exercises/es/all.json ― sólo la 1.ª vez */
 (async () => {
   if (!localStorage.getItem(LS_EX)) {
     try {
       const res  = await fetch('exercises/es/all.json');
-      const obj  = await res.json();            // objeto { Grupo: [ … ] }
+      if (!res.ok) throw Error(res.status);
+      const raw  = await res.json();
 
-      /* transforma a array [{ nombre, grupo, urlH, urlM, equipo, dificultad }] */
-      if (!Array.isArray(obj)) {           // ← si tu JSON sigue siendo objeto {grupo:[…]}
-        const catalogo = Object.entries(obj).flatMap(([grupo, lista]) =>
-          lista.map(e => ({
-            nombre     : e.Ejercicio,
-            grupo      : grupo,
-            urlH       : e.Video.Hombre,
-            urlM       : e.Video.Mujer,
-            equipo     : (e.Equipo||'').replace(/^.*}/,'').trim(),
-            dificultad : e.Dificultad
-          }))
-        );
-        localStorage.setItem(LS_EX, JSON.stringify(catalogo));
-        console.log(localStorage);
-      } else {
-        localStorage.setItem(LS_EX, JSON.stringify(obj));  // ya era array
-      }
+      /* a) aplanar ⇒ [{nombre, grupo, equipo, dificultad, urlH, urlM}] */
+      const flat = [];
+      Object.entries(raw).forEach(([grupo, lista]) => {
+        lista.forEach(e => flat.push({
+          nombre      : e.Ejercicio,
+          grupo,
+          equipo      : e.Equipo || 'Sin equipo',
+          dificultad  : e.Dificultad || '—',
+          urlH        : e.Video?.Hombre || '',
+          urlM        : e.Video?.Mujer  || ''
+        }));
+      });
 
+      localStorage.setItem(LS_EX, JSON.stringify(flat));
     } catch (err) {
       console.error('No se pudo cargar exercises/es/all.json →', err);
-      alert('No se encontró el catálogo de ejercicios. Colócalo en /exercises/es/all.json o importa uno manualmente.');
-      localStorage.setItem(LS_EX, '[]');   // catálogo vacío
+      localStorage.setItem(LS_EX, '[]');              // catálogo vacío
     }
   }
 })();
 
+/* helpers */
+const getEx = () => JSON.parse(localStorage.getItem(LS_EX) || '[]');
 
-/* helper */
-const getEx = ()=>JSON.parse(localStorage.getItem(LS_EX)||'[]');
-const setEx = a =>localStorage.setItem(LS_EX,JSON.stringify(a));
-
-window.renderEjercicios = c =>{
+/* ===== vista ===== */
+window.renderEjercicios = c => {
   const ex = getEx();
   c.innerHTML = `
     <h1 class="text-2xl font-bold mb-4"><i class="fas fa-dumbbell mr-2"></i>Catálogo de ejercicios</h1>
 
     <!-- Filtros -->
     <div class="flex flex-wrap gap-3 mb-4">
-      <input id="q"  placeholder="Buscar..." class="border p-2 rounded grow">
+      <input id="q"  class="border p-2 rounded grow" placeholder="Buscar…">
       <select id="grp" class="border p-2 rounded">
         <option value="">Grupo muscular</option>
         ${[...new Set(ex.map(e=>e.grupo))].sort().map(g=>`<option>${g}</option>`).join('')}
       </select>
+      <select id="diff" class="border p-2 rounded">
+        <option value="">Dificultad</option>
+        ${[...new Set(ex.map(e=>e.dificultad))].sort().map(d=>`<option>${d}</option>`).join('')}
+      </select>
       <select id="eqp" class="border p-2 rounded">
         <option value="">Equipo</option>
-        ${[...new Set(ex.map(e=>e.equipo))].sort().map(e=>`<option>${e}</option>`).join('')}
+        ${[...new Set(ex.map(e=>e.equipo))].sort().map(eq=>`<option>${eq}</option>`).join('')}
       </select>
-
-      <label class="bg-indigo-600 text-white px-3 py-2 rounded cursor-pointer">
-        <i class="fas fa-file-import mr-1"></i>Importar
-        <input type="file" accept=".json" class="hidden" onchange="importExercises(this)">
-      </label>
     </div>
 
-    <!-- Grid -->
+    <!-- Grid catálogo -->
     <div id="exGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 h-[75vh] overflow-auto pr-2"></div>
   `;
 
-  document.getElementById('q' ).oninput   =
-  document.getElementById('grp').onchange =
-  document.getElementById('eqp').onchange = ()=>paint();
+  /* listeners */
+  ['q','grp','diff','eqp'].forEach(id=>{
+    c.querySelector('#'+id).oninput = c.querySelector('#'+id).onchange = paint;
+  });
 
   paint();
 
   function paint(){
-    const q   = document.getElementById('q').value.toLowerCase();
-    const grp = document.getElementById('grp').value;
-    const eqp = document.getElementById('eqp').value;
+    const q    = c.querySelector('#q').value.toLowerCase();
+    const grp  = c.querySelector('#grp').value;
+    const dif  = c.querySelector('#diff').value;
+    const eqp  = c.querySelector('#eqp').value;
 
-    const list = getEx().filter(e =>
+    const list = getEx().filter(e=>
       (!q   || e.nombre.toLowerCase().includes(q)) &&
-      (!grp || e.grupo === grp) &&
-      (!eqp || e.equipo === eqp)
+      (!grp || e.grupo===grp) &&
+      (!dif || e.dificultad===dif) &&
+      (!eqp || e.equipo===eqp)
     );
 
-    document.getElementById('exGrid').innerHTML = list.map(e => `
+    document.getElementById('exGrid').innerHTML = list.map(e=>`
       <div class="bg-white rounded shadow p-3 flex flex-col">
         <h4 class="font-semibold mb-1">${e.nombre}</h4>
-        <p class="text-xs text-gray-500 mb-1">
-          ${e.grupo} · ${e.equipo || 'Sin equipo'} · ${e.dificultad || ''}
-        </p>
+        <p class="text-xs text-gray-500 mb-1">${e.grupo} · ${e.equipo}</p>
+        <p class="text-xs text-amber-600 mb-2">Nivel: ${e.dificultad}</p>
 
         <div class="mt-auto flex gap-2">
-          <a href="${e.urlH}" target="_blank"
-            class="grow bg-blue-600 text-white text-center px-2 py-1 rounded text-sm">
-            Hombre
-          </a>
-          <a href="${e.urlM}" target="_blank"
-            class="grow bg-pink-600 text-white text-center px-2 py-1 rounded text-sm">
-            Mujer
-          </a>
+          ${e.urlH ? `<a href="${e.urlH}" target="_blank" class="flex-1 text-center bg-blue-600 text-white text-xs px-2 py-1 rounded">Vídeo&nbsp;H</a>` : ''}
+          ${e.urlM ? `<a href="${e.urlM}" target="_blank" class="flex-1 text-center bg-pink-600 text-white text-xs px-2 py-1 rounded">Vídeo&nbsp;M</a>` : ''}
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
-
-};
-
-/* ---- import catálogo ---- */
-window.importExercises = inp=>{
-  const f = inp.files[0]; if(!f) return;
-  const fr = new FileReader(); fr.onload=e=>{
-    try{
-      const arr = JSON.parse(e.target.result);
-      if(!Array.isArray(arr)) throw 'JSON debe ser un array';
-      setEx(arr); alert('Catálogo importado');
-      location.hash='#/ejercicios';   // recarga vista
-    }catch(err){alert(err);}
-  };
-  fr.readAsText(f);
 };
