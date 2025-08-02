@@ -19,6 +19,9 @@ const LS_EX = 'workoutPlan_exercises';
         dificultad  : e.Dificultad
       }))
     );
+
+    localStorage.setItem(LS_EX, JSON.stringify(catalogo));
+
     } catch (err) {
       console.error('No se pudo cargar exercises/es/all.json →', err);
       alert('No se encontró el catálogo de ejercicios. Colócalo en /exercises/es/all.json o importa uno manualmente.');
@@ -69,21 +72,34 @@ window.renderEjercicios = c =>{
     const q   = document.getElementById('q').value.toLowerCase();
     const grp = document.getElementById('grp').value;
     const eqp = document.getElementById('eqp').value;
-    const list = getEx().filter(e=>
+
+    const list = getEx().filter(e =>
       (!q   || e.nombre.toLowerCase().includes(q)) &&
-      (!grp || e.grupo===grp) &&
-      (!eqp || e.equipo===eqp)
+      (!grp || e.grupo === grp) &&
+      (!eqp || e.equipo === eqp)
     );
 
-    document.getElementById('exGrid').innerHTML = list.map(e=>`
+    document.getElementById('exGrid').innerHTML = list.map(e => `
       <div class="bg-white rounded shadow p-3 flex flex-col">
-        <img src="${e.media}" alt="${e.nombre}" class="h-32 object-contain mb-2">
-        <h4 class="font-semibold">${e.nombre}</h4>
-        <p class="text-xs text-gray-500 mb-1">${e.grupo} · ${e.equipo||'Sin equipo'}</p>
-        <button onclick="alert(JSON.stringify(${JSON.stringify(e)},null,2))"
-                class="mt-auto bg-blue-600 text-white px-2 py-1 rounded text-sm">Detalle</button>
-      </div>`).join('');
+        <h4 class="font-semibold mb-1">${e.nombre}</h4>
+        <p class="text-xs text-gray-500 mb-1">
+          ${e.grupo} · ${e.equipo || 'Sin equipo'} · ${e.dificultad || ''}
+        </p>
+
+        <div class="mt-auto flex gap-2">
+          <a href="${e.urlH}" target="_blank"
+            class="grow bg-blue-600 text-white text-center px-2 py-1 rounded text-sm">
+            Hombre
+          </a>
+          <a href="${e.urlM}" target="_blank"
+            class="grow bg-pink-600 text-white text-center px-2 py-1 rounded text-sm">
+            Mujer
+          </a>
+        </div>
+      </div>
+    `).join('');
   }
+
 };
 
 /* ---- import catálogo ---- */
