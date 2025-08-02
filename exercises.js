@@ -5,10 +5,20 @@ const LS_EX = 'workoutPlan_exercises';
 (async () => {
   if (!localStorage.getItem(LS_EX)) {
     try {
-      const res  = await fetch('exercises/es/all.json');   // ← ruta relativa
-      if (!res.ok) throw Error(res.status);
-      const json = await res.json();
-      localStorage.setItem(LS_EX, JSON.stringify(json));
+    const res  = await fetch('exercises/es/all.json');
+    const obj  = await res.json();            // objeto { Grupo: [ … ] }
+
+    /* transforma a array [{ nombre, grupo, urlH, urlM, equipo, dificultad }] */
+    const catalogo = Object.entries(obj).flatMap(([grupo, lista]) =>
+      lista.map(e => ({
+        nombre      : e.Ejercicio,
+        grupo       : grupo,
+        urlH        : e.Video.Hombre,
+        urlM        : e.Video.Mujer,
+        equipo      : (e.Equipo||'').replace(/^.*}/,'').trim(),  // quita svg
+        dificultad  : e.Dificultad
+      }))
+    );
     } catch (err) {
       console.error('No se pudo cargar exercises/es/all.json →', err);
       alert('No se encontró el catálogo de ejercicios. Colócalo en /exercises/es/all.json o importa uno manualmente.');
