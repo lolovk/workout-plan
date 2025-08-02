@@ -2,18 +2,65 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Plan Reset 30D</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workout Plan</title>
+  
+  <!-- Tailwind y Chart.js -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-</head>
-<body class="bg-gray-100 min-h-screen text-gray-800">
-  <div class="max-w-6xl mx-auto p-4">
-    <h1 class="text-4xl font-bold mb-4">Plan Reset 30D - Dashboard</h1>
-    <div id="app"></div>
-  </div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="app.js"></script>
+
+  <!-- flatpickr (calendar range picker) -->
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
+  <!-- App scripts -->
+  <script defer src="router.js"></script>
+  <script defer src="registros.js"></script>
+  <script defer src="formRegistro.js"></script>
+  <script defer src="estadisticas.js"></script>
+  <script defer src="calendar.js"></script>
+  <script defer src="exercises.js"></script>
+
+
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- App custom styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex overflow-hidden">
+  <!-- Sidebar (desktop & toggled on mobile) -->
+  <aside id="sidebar" class="w-64 bg-white shadow-lg p-6 space-y-6 fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out z-20">
+    <h1 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-dumbbell"></i>Workout Plan</h1>
+    <nav class="space-y-4">
+      <a href="#/home" class="block hover:text-blue-600"><i class="fas fa-house mr-2"></i>Home</a>
+      <a href="#/registros" class="block hover:text-blue-600"><i class="fas fa-table mr-2"></i>Registros</a>
+      <a href="#/estadisticas" class="block hover:text-blue-600"><i class="fas fa-chart-line mr-2"></i>Estadísticas</a>
+      <a href="#/ejercicios" class="block hover:text-blue-600"><i class="fas fa-dumbbell mr-2"></i>Ejercicios</a>
+      <a href="#/rutinas" class="block hover:text-blue-600"><i class="fas fa-calendar-check mr-2"></i>Rutinas</a>
+      <a href="#/ajustes" class="block hover:text-blue-600"><i class="fas fa-cog mr-2"></i>Ajustes</a>
+    </nav>
+  </aside>
+
+  <!-- Main wrapper -->
+  <div class="flex-1 flex flex-col w-full md:ml-64">
+    <!-- Mobile header -->
+    <header class="md:hidden bg-white p-4 shadow flex items-center justify-between">
+      <button aria-label="Abrir menú" onclick="toggleSidebar()"><i class="fas fa-bars text-xl"></i></button>
+      <span class="font-bold">Workout Plan</span>
+    </header>
+
+    <!-- Content -->
+    <main id="app" class="flex-1 p-6 overflow-y-auto"></main>
+  </div>
+
+  <!-- Overlay móvil -->
+  <div id="overlay"
+    class="fixed inset-0 bg-black bg-opacity-40 hidden z-10 md:hidden"
+    onclick="closeSidebar()"
+    aria-label="Cerrar menú lateral">
+  </div>
+
 </body>
 </html>
