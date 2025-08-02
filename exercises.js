@@ -5,20 +5,26 @@ const LS_EX = 'workoutPlan_exercises';
 (async () => {
   if (!localStorage.getItem(LS_EX)) {
     try {
-    const res  = await fetch('exercises/es/all.json');
-    const obj  = await res.json();            // objeto { Grupo: [ … ] }
+      const res  = await fetch('exercises/es/all.json');
+      const obj  = await res.json();            // objeto { Grupo: [ … ] }
 
-    /* transforma a array [{ nombre, grupo, urlH, urlM, equipo, dificultad }] */
-    const catalogo = Object.entries(obj).flatMap(([grupo, lista]) =>
-      lista.map(e => ({
-        nombre      : e.Ejercicio,
-        grupo       : grupo,
-        urlH        : e.Video.Hombre,
-        urlM        : e.Video.Mujer,
-        equipo      : (e.Equipo||'').replace(/^.*}/,'').trim(),  // quita svg
-        dificultad  : e.Dificultad
-      }))
-    );
+      /* transforma a array [{ nombre, grupo, urlH, urlM, equipo, dificultad }] */
+      if (!Array.isArray(obj)) {           // ← si tu JSON sigue siendo objeto {grupo:[…]}
+        const catalogo = Object.entries(obj).flatMap(([grupo, lista]) =>
+          lista.map(e => ({
+            nombre     : e.Ejercicio,
+            grupo      : grupo,
+            urlH       : e.Video.Hombre,
+            urlM       : e.Video.Mujer,
+            equipo     : (e.Equipo||'').replace(/^.*}/,'').trim(),
+            dificultad : e.Dificultad
+          }))
+        );
+        localStorage.setItem(LS_EX, JSON.stringify(catalogo));
+        console.log(localStorage);
+      } else {
+        localStorage.setItem(LS_EX, JSON.stringify(obj));  // ya era array
+      }
 
     } catch (err) {
       console.error('No se pudo cargar exercises/es/all.json →', err);
@@ -31,7 +37,7 @@ const LS_EX = 'workoutPlan_exercises';
 
 /* helper */
 const getEx = ()=>JSON.parse(localStorage.getItem(LS_EX)||'[]');
-const setEx = a =>localStorage.setItem(LS_EX, JSON.stringify(catalogo));
+const setEx = a =>localStorage.setItem(LS_EX,JSON.stringify(a));
 
 window.renderEjercicios = c =>{
   const ex = getEx();
