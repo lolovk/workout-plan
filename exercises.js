@@ -20,8 +20,6 @@ const LS_EX = 'workoutPlan_exercises';
       }))
     );
 
-    localStorage.setItem(LS_EX, JSON.stringify(catalogo));
-
     } catch (err) {
       console.error('No se pudo cargar exercises/es/all.json →', err);
       alert('No se encontró el catálogo de ejercicios. Colócalo en /exercises/es/all.json o importa uno manualmente.');
@@ -33,7 +31,7 @@ const LS_EX = 'workoutPlan_exercises';
 
 /* helper */
 const getEx = ()=>JSON.parse(localStorage.getItem(LS_EX)||'[]');
-const setEx = a =>localStorage.setItem(LS_EX,JSON.stringify(a));
+const setEx = a =>localStorage.setItem(LS_EX, JSON.stringify(catalogo));
 
 window.renderEjercicios = c =>{
   const ex = getEx();
