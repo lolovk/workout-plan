@@ -1,15 +1,22 @@
 /********  exercises.js  ********/
 const LS_EX = 'workoutPlan_exercises';
 
-/* ---- seed catalogue on first load ---- */
-(async ()=>{
-  if(!localStorage.getItem(LS_EX)){
-    // seed desde GitHub raw
-    const url='https://raw.githubusercontent.com/yuhonas/free-exercise-db/master/exercises.json';
-    const res = await fetch(url); const json = await res.json();
-    localStorage.setItem(LS_EX, JSON.stringify(json));
+/* -------- seed: cargar tu JSON local -------- */
+(async () => {
+  if (!localStorage.getItem(LS_EX)) {
+    try {
+      const res  = await fetch('exercises/es/all.json');   // ← ruta relativa
+      if (!res.ok) throw Error(res.status);
+      const json = await res.json();
+      localStorage.setItem(LS_EX, JSON.stringify(json));
+    } catch (err) {
+      console.error('No se pudo cargar exercises/es/all.json →', err);
+      alert('No se encontró el catálogo de ejercicios. Colócalo en /exercises/es/all.json o importa uno manualmente.');
+      localStorage.setItem(LS_EX, '[]');   // catálogo vacío
+    }
   }
 })();
+
 
 /* helper */
 const getEx = ()=>JSON.parse(localStorage.getItem(LS_EX)||'[]');
